@@ -28,6 +28,7 @@ private:
 
 
 
+
 namespace Ui {
 class BrowserWindow;
 }
@@ -42,7 +43,7 @@ public:
 
     unsigned int id() {return objectId ;}
 
-    Q_INVOKABLE void load(const QString &) ;
+    Q_INVOKABLE void load(const QString & url) ;
 
 signals:
     void runScript() ;

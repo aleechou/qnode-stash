@@ -19,11 +19,13 @@ public:
     }
 
     static unsigned int registerScriptObject(QObject *parent) ;
+    static QVariant callMethod(unsigned int id, const QString &, const QVariantList &) ;
+    static QVariant callMethod(QObject *, const QString &, const QVariantList &) ;
     static void invokeMethod(unsigned int id, const QString &, const QVariantList &, QObject * from=nullptr,unsigned int reqId=0) ;
     static void invokeMethod(QObject *, const QString &, const QVariantList &, QObject * from=nullptr,unsigned int reqId=0) ;
     static ScriptObjects * queryScriptObjectById(unsigned int id) ;
 
-    static QVariant call(QObject* object, QMetaMethod metaMethod, QVariantList args) ;
+    static QVariant call(QObject* object, QMetaMethod metaMethod, const QVariantList & args) ;
 
     static ScriptObjects * singleton() ;
 

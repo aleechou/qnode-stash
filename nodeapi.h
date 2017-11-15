@@ -19,7 +19,7 @@
                             = v8::FunctionTemplate::New(isolate, cls::func);    \
 		global->Set(                                                            \
             v8::String::NewFromUtf8(                                            \
-                isolate, CATSTR("__$qnode_",name)                       \
+                isolate, name                                                   \
             ), functmp_##func->GetFunction()                                    \
         );
 

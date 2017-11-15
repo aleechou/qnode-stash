@@ -68,7 +68,7 @@ INCLUDEPATH += $$PWD \
 
 LIBS+= -L$$PWD/deps/node/out/Release/lib.target -lnode
 
-LIBS += -ldl -lm
+QMAKE_RPATHDIR+= $ORIGIN:$ORIGIN/lib
 
 
 
@@ -86,3 +86,8 @@ QMAKE_CXXFLAGS += -Wno-unused-variable
 QMAKE_CXXFLAGS += -Wno-unused-function
 QMAKE_CXXFLAGS += -Wno-reorder
 QMAKE_CXXFLAGS += -fpermissive
+
+RESOURCES += \
+    lib.qrc
+
+

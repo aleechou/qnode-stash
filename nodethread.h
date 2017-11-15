@@ -12,16 +12,12 @@ class NodeThread : public QThread
 {
     Q_OBJECT
 public:
-    explicit NodeThread(int argc, char *argv[], QObject *parent = nullptr);
+    explicit NodeThread(int argc, char *argv[], const QString & sdkPath=QString(),QObject *parent = nullptr);
 
     static void beforeloop(v8::Isolate *, void *) ;
 
-    static void NodeThread::nodeInitialize(v8::Local<v8::Object> exports) ;
     static void jsInvoke(const v8::FunctionCallbackInfo<v8::Value> & args) ;
-    static void jsCreateBrowserWindow(const v8::FunctionCallbackInfo<v8::Value> & args) ;
-    static void jsRunScript(const v8::FunctionCallbackInfo<v8::Value> & args) ;
-
-
+    static void jsCall(const v8::FunctionCallbackInfo<v8::Value> & args) ;
 
     Q_INVOKABLE void invokeReturn(unsigned int invokeId, const QVariant &) ;
 protected:
@@ -30,16 +26,15 @@ protected:
 private:
     char ** argv ;
     int argc ;
+    QString sdkPath = ":sdk/index.js" ;
     v8::Isolate * isolate = nullptr ;
 
     uv_idle_t * uvidler = nullptr ;
 
     unsigned int invokeAnotherThreadReqId = 0 ;
 
-
-
-public slots:
-     void onRunScript(const QString &, unsigned int reqId) ;
+    Q_INVOKABLE void runScript(const QString &) ;
+    Q_INVOKABLE bool requireScript(const QString &) ;
 };
 
 unsigned int registerScriptThread(QObject * ) ;

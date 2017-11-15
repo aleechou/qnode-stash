@@ -15,6 +15,25 @@ unsigned int ScriptObjects::registerScriptObject(QObject * parent) {
     return id ;
 }
 
+QVariant ScriptObjects::callMethod(unsigned int objId, const QString & method, const QVariantList & args) {
+    QObject * object = ScriptObjects::queryScriptObjectById(objId) ;
+    if(!object) {
+        qDebug() << "unknow script object id:" << objId ;
+        return ;
+    }
+    return callMethod(object, method, args) ;
+}
+
+QVariant ScriptObjects::callMethod(QObject * object, const QString & method, const QVariantList & args) {
+    int index = object->metaObject()->indexOfMethod(method.toStdString().c_str());
+    if(index<0) {
+        qDebug() << "unknow method" << method << "for class" << object->metaObject()->className() ;
+        return QVariant();
+    }
+    QMetaMethod metaMethod = object->metaObject()->method(index);
+    return ScriptObjects::call(object, metaMethod,args) ;
+}
+
 void ScriptObjects::invokeMethod(unsigned int objId, const QString & method, const QVariantList & args, QObject * from, unsigned int reqId) {
     QObject * object = ScriptObjects::queryScriptObjectById(objId) ;
     if(!object) {
@@ -50,7 +69,7 @@ void ScriptObjects::invokeMethod(QObject * object, const QString & method, const
 
 
 
-QVariant ScriptObjects::call(QObject* object, QMetaMethod metaMethod, QVariantList args)
+QVariant ScriptObjects::call(QObject* object, QMetaMethod metaMethod, const QVariantList & args)
 {
     // Convert the arguments
 
@@ -197,12 +216,30 @@ QString ScriptObjects::methodList(unsigned int objId) {
         return QString("unknow object id: %1").arg(objId);
     }
     const QMetaObject* metaObject = object->metaObject();
-    QString output ;
 
+    QString output = "[\r\n" ;
 
     for(int i = 0; i < metaObject->methodCount(); ++i) {
-        output+= QString(metaObject->method(i).methodSignature()) + "\r\n" ;
+        QMetaMethod metaMethod = metaObject->method(i) ;
+        output+= "  {\r\n" ;
+        output+= "    name:\"" + QString(metaMethod.name()) + "\",\r\n" ;
+        output+= "    returnType:\"" + QString(metaMethod.typeName()) + "\",\r\n" ;
+
+        output+= "    params:[\r\n" ;
+        QList<QByteArray> parameterNames = metaMethod.parameterNames() ;
+        QList<QByteArray> parameterTypes = metaMethod.parameterTypes() ;
+        for(int p=0;p<metaMethod.parameterCount();p++){
+            output+= "      {\r\n" ;
+            output+= "        name: \"" +QString(parameterNames[p])+ "\",\r\n" ;
+            output+= "        type: \"" +QString(parameterTypes[p])+ "\",\r\n" ;
+            output+= "      },\r\n" ;
+
+        }
+        output+= "    ],\r\n" ;
+
+        output+= "    signature:\"" + QString(metaMethod.methodSignature()) + "\",\r\n" ;
+        output+= "  },\r\n" ;
     }
 
-    return output ;
+    return output + "]" ;
 }
