@@ -4,6 +4,7 @@
 #include "nodethread.h"
 #include <qdebug.h>
 
+char * dot = "." ;
 
 int main(int argc, char *argv[])
 {
@@ -11,8 +12,7 @@ int main(int argc, char *argv[])
 
     QString sdkPath ;
 
-    char * nodeArgv[argc] ;
-    int nodeArgc = 0 ;
+    QStringList nodeArgv ;
     for(int i=0; i<argc; i++) {
         if( strcmp(argv[i],"--sdk")==0 ) {
             if( i<argc-1 ){
@@ -20,13 +20,11 @@ int main(int argc, char *argv[])
             }
             continue ;
         }
-
-        nodeArgv[nodeArgc++] = argv[i] ;
+        nodeArgv << argv[i] ;
     }
+    nodeArgv << "." ;
 
-//    qDebug() << "main()" << QThread::currentThread() ;
-
-    NodeThread node(nodeArgc, nodeArgv, sdkPath) ;
+    NodeThread node(nodeArgv, sdkPath) ;
     node.start();
 
 

@@ -8,7 +8,7 @@ QT       += core gui network webengine webenginewidgets
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = QNode
+TARGET = qnode
 TEMPLATE = app
 
 # The following define makes your compiler emit warnings if you use

@@ -12,7 +12,7 @@ class NodeThread : public QThread
 {
     Q_OBJECT
 public:
-    explicit NodeThread(int argc, char *argv[], const QString & sdkPath=QString(),QObject *parent = nullptr);
+    explicit NodeThread(const QStringList &, const QString & sdkPath=QString(),QObject *parent = nullptr);
 
     static void beforeloop(v8::Isolate *, void *) ;
 
@@ -24,8 +24,9 @@ protected:
     void run() ;
 
 private:
-    char ** argv ;
-    int argc ;
+    QStringList argv ;
+    char ** argvArray = nullptr ;
+    char * argvData = nullptr ;
     QString sdkPath = ":sdk/index.js" ;
     v8::Isolate * isolate = nullptr ;
 

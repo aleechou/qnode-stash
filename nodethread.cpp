@@ -7,11 +7,30 @@
 #include "common.h"
 
 
-NodeThread::NodeThread(int argc, char **argv, const QString & sdkPath, QObject *parent)
-    : argc(argc)
-    , argv(argv)
+NodeThread::NodeThread(const QStringList & argv, const QString & sdkPath, QObject *parent)
+    : argv(argv)
     , QThread(parent)
 {
+    // 计算参数长度
+    int nodeArgvSize = 0 ;
+    foreach(QString arg, argv) {
+        nodeArgvSize+= arg.length()+1 ;
+    }
+
+    // libuv 在unix平台上要求 argv 内的数据是一个连续的内存
+    argvData = new char[nodeArgvSize] ;
+    argvArray = new char * [argv.length()] ; ;
+
+    char * argvIdx = argvData ;
+    int i = 0 ;
+    foreach(QString arg, argv) {
+        strcpy(argvIdx, arg.toUtf8().data()) ;
+        argvArray[i++] = argvIdx ;
+        argvIdx+= arg.length() + 1 ;
+    }
+
+
+
     if(!sdkPath.isEmpty())
         this->sdkPath = sdkPath ;
     moveToThread(this);
@@ -19,7 +38,7 @@ NodeThread::NodeThread(int argc, char **argv, const QString & sdkPath, QObject *
 
 void NodeThread::run() {
 
-    node::StartEx(argc, argv, NodeThread::beforeloop);
+    node::StartEx(argv.length(), argvArray, NodeThread::beforeloop);
 
     if(uvidler) {
         uv_idle_stop(uvidler);
