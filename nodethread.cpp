@@ -90,7 +90,11 @@ void NodeThread::beforeloop(v8::Isolate * isolate, void * loop){
 
     uv_idle_init((uv_loop_t*)loop, thread->uvidler);
 
+#ifdef Q_OS_MACX
+    uv_idle_start(thread->uvidler, [](uv_idle_t*){
+#elif
     uv_idle_start(thread->uvidler, [](uv_idle_t*, uv_idle_cb){
+#endif
         NodeThread * thread = (NodeThread*)QThread::currentThread() ;
         thread->eventDispatcher()->processEvents(QEventLoop::EventLoopExec) ;
     }) ;
@@ -136,7 +140,7 @@ bool NodeThread::requireScript(const QString & path){
         }                                                                   \
         else {                                                              \
             qDebug() << "unsuported args type: " << ToQString(args[i]) ;    \
-            return QVariant() ;                                             \
+            return ;                                                        \
         }                                                                   \
     }
 
@@ -188,7 +192,7 @@ void NodeThread::jsOn(const v8::FunctionCallbackInfo<v8::Value> & args){
     const QString signal = ToQString(args[1]) ;
     int connId = thread->invokeAnotherThreadReqId ++ ;
 
-    QMetaObject * metaObj = object->metaObject() ;
+    const QMetaObject * metaObj = object->metaObject() ;
     int sigindex = metaObj->indexOfSignal(signal.toStdString().c_str()) ;
     if(sigindex<0) {
         qDebug() << "unknow signal" << signal << "of class" << metaObj->className() ;

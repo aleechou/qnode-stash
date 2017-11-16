@@ -66,7 +66,11 @@ INCLUDEPATH += $$PWD \
 #    $$PWD/deps/node/out/Release/obj.target/tools/icu/libicustubdata.a \
 #    $$PWD/deps/node/out/Release/obj.target/tools/icu/libicui18n.a
 
-LIBS+= -L$$PWD/deps/node/out/Release/lib.target -lnode
+unix:macx {
+    LIBS+= -L$$PWD/deps/node/out/Release -lnode.59
+}else {
+    LIBS+= -L$$PWD/deps/node/out/Release/lib.target -lnode
+}
 
 QMAKE_RPATHDIR+= $ORIGIN:$ORIGIN/lib
 

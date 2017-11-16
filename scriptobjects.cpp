@@ -7,7 +7,7 @@
 
 ScriptObjects * ScriptObjects::global = nullptr ;
 static unsigned int ScriptObjectAssignedId = 0 ;
-static QMap<unsigned int, ScriptObjects *> poolScriptObjects ;
+static QMap<unsigned int, QObject *> poolScriptObjects ;
 
 unsigned int ScriptObjects::registerScriptObject(QObject * parent) {
     unsigned int id = ScriptObjectAssignedId ++ ;
@@ -19,7 +19,7 @@ QVariant ScriptObjects::callMethod(unsigned int objId, const QString & method, c
     QObject * object = ScriptObjects::queryScriptObjectById(objId) ;
     if(!object) {
         qDebug() << "unknow script object id:" << objId ;
-        return ;
+        return QVariant();
     }
     return callMethod(object, method, args) ;
 }
@@ -187,7 +187,7 @@ QVariant ScriptObjects::call(QObject* object, QMetaMethod metaMethod, const QVar
     }
 }
 
-ScriptObjects * ScriptObjects::queryScriptObjectById(unsigned int id) {
+QObject * ScriptObjects::queryScriptObjectById(unsigned int id) {
     if( !poolScriptObjects.contains(id) ){
         return nullptr ;
     }
