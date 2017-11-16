@@ -1,6 +1,6 @@
 <RCC>
     <qresource prefix="/">
         <file>sdk/index.js</file>
+        <file>sdk/webkit/require.js</file>
     </qresource>
-    <qresource prefix="/xx"/>
 </RCC>

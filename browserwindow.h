@@ -3,7 +3,7 @@
 
 #include <QWidget>
 #include <QMap>
-#include <QThread>
+#include <QJsonValue>
 #include "scriptobjects.h"
 
 class BrowserWindowCreator: public QObject
@@ -29,6 +29,15 @@ private:
 
 
 
+class BWApiFs: public QObject {
+Q_OBJECT
+public:
+    BWApiFs(QObject *parent = 0): QObject(parent) {}
+
+    Q_INVOKABLE bool exists(const QString & filepath) ;
+    Q_INVOKABLE QByteArray readFile(const QString & filepath) ;
+};
+
 namespace Ui {
 class BrowserWindow;
 }
@@ -44,12 +53,16 @@ public:
     unsigned int id() {return objectId ;}
 
     Q_INVOKABLE void load(const QString & url) ;
+    Q_INVOKABLE void openConsole() ;
+
+//    Q_INVOKABLE QJsonValue loadScript(const QString &) ;
 
 signals:
-    void runScript() ;
+    void loaded(bool) ;
 
 private:
     Ui::BrowserWindow *ui;
+    BWApiFs apiFs ;
 
     unsigned int objectId;
 };

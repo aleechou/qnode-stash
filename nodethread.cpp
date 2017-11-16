@@ -5,6 +5,7 @@
 #include "browserwindow.h"
 #include "nodeapi.h"
 #include "common.h"
+#include <QFile>
 
 
 NodeThread::NodeThread(const QStringList & argv, const QString & sdkPath, QObject *parent)
@@ -63,7 +64,6 @@ void NodeThread::invokeReturn(unsigned int invokeId, const QVariant & value) {
     v8::Script::Compile ( v8string(script.toStdString().c_str()) )->Run();
 }
 
-#include <QFile>
 
 void NodeThread::beforeloop(v8::Isolate * isolate, void * loop){
 
@@ -75,12 +75,12 @@ void NodeThread::beforeloop(v8::Isolate * isolate, void * loop){
     // qnode api
     DefineMethod("$qnode_api_invoke", NodeThread, jsInvoke);
     DefineMethod("$qnode_api_call", NodeThread, jsCall);
+    DefineMethod("$qnode_api_on", NodeThread, jsOn);
 
     global->Set(v8string("$qnode_api_browser_window_creator"), v8int32(BrowserWindowCreator::singleton()->id())) ;
     global->Set(v8string("$qnode_api_script_objects"), v8int32(ScriptObjects::singleton()->id())) ;
 
     // load qnode sdk
-    qd << thread->sdkPath ;
     if(!thread->sdkPath.isEmpty()) {
         thread->requireScript(thread->sdkPath) ;
     }
@@ -115,6 +115,8 @@ bool NodeThread::requireScript(const QString & path){
     }
 
     this->runScript(file.readAll());
+
+    file.close();
 
     return true ;
 }
@@ -169,3 +171,41 @@ void NodeThread::jsCall(const v8::FunctionCallbackInfo<v8::Value> & args){
     args.GetReturnValue().Set( v8string(ret.toString().toStdString().c_str()) ) ;
 }
 
+
+void NodeThread::jsOn(const v8::FunctionCallbackInfo<v8::Value> & args){
+
+    NodeThread* thread = (NodeThread*)QThread::currentThread() ;
+    v8::Isolate * isolate = args.GetIsolate() ;
+
+    int objId = args[0]->ToInt32()->Value() ;
+    QObject * object = ScriptObjects::queryScriptObjectById(objId) ;
+    if(nullptr==object){
+        qDebug() << "unknow script object" << objId ;
+        args.GetReturnValue().Set(v8::Boolean::New(isolate, false)) ;
+        return ;
+    }
+
+    const QString signal = ToQString(args[1]) ;
+    int connId = thread->invokeAnotherThreadReqId ++ ;
+
+    QMetaObject * metaObj = object->metaObject() ;
+    int sigindex = metaObj->indexOfSignal(signal.toStdString().c_str()) ;
+    if(sigindex<0) {
+        qDebug() << "unknow signal" << signal << "of class" << metaObj->className() ;
+        args.GetReturnValue().Set(v8::Boolean::New(isolate, false)) ;
+        return ;
+    }
+
+    DynamicConnectionReceiver * receiver = new DynamicConnectionReceiver(connId, thread) ;
+    QMetaObject::connect(object, sigindex, receiver, receiver->metaObject()->indexOfSlot("slot()")) ;
+
+    args.GetReturnValue().Set(v8int32(connId)) ;
+}
+
+void DynamicConnectionReceiver::slot(){
+    sender() ;
+    QString script = QString("$qnode_api_emit(%1)").arg(connId) ;
+    v8::Isolate * isolate = from->isolate ;
+    v8::HandleScope scope(from->isolate);
+    v8::Script::Compile ( v8string(script.toStdString().c_str()) )->Run();
+}

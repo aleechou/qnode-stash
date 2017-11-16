@@ -8,6 +8,9 @@
 #include "scriptobjects.h"
 #include <QVariant>
 
+class DynamicConnectionReceiver ;
+
+
 class NodeThread : public QThread
 {
     Q_OBJECT
@@ -18,8 +21,11 @@ public:
 
     static void jsInvoke(const v8::FunctionCallbackInfo<v8::Value> & args) ;
     static void jsCall(const v8::FunctionCallbackInfo<v8::Value> & args) ;
+    static void jsOn(const v8::FunctionCallbackInfo<v8::Value> & args) ;
 
     Q_INVOKABLE void invokeReturn(unsigned int invokeId, const QVariant &) ;
+
+    friend class DynamicConnectionReceiver ;
 protected:
     void run() ;
 
@@ -38,6 +44,18 @@ private:
     Q_INVOKABLE bool requireScript(const QString &) ;
 };
 
+
+class DynamicConnectionReceiver: public QObject {
+    Q_OBJECT
+public:
+    explicit DynamicConnectionReceiver(unsigned int connId, NodeThread * from):
+        connId(connId), from(from), QObject(from) {}
+public slots:
+    void slot() ;
+private:
+    unsigned int connId ;
+    NodeThread * from ;
+};
 unsigned int registerScriptThread(QObject * ) ;
 QObject * queryScriptThreadById(unsigned int) ;
 
