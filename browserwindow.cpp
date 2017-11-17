@@ -15,8 +15,8 @@ BrowserWindowCreator::BrowserWindowCreator() {
     moveToThread(QCoreApplication::instance()->thread()) ;
     _id = ScriptObjects::registerScriptObject(this) ;
 }
-unsigned int BrowserWindowCreator::createBrowserWindow(){
-    BrowserWindow * window = new BrowserWindow();
+unsigned int BrowserWindowCreator::createBrowserWindow(unsigned int parentId){
+    BrowserWindow * window = new BrowserWindow(parentId);
     return window->id() ;
 }
 
@@ -29,13 +29,13 @@ BrowserWindowCreator * BrowserWindowCreator::singleton() {
 }
 
 
-BrowserWindow::BrowserWindow(QWidget *parent) :
+BrowserWindow::BrowserWindow(unsigned int parentObjectId, QWidget *parent) :
     QWidget(parent),
+    parentObjectId(parentObjectId),
     ui(new Ui::BrowserWindow)
 {
     ui->setupUi(this);
     objectId = ScriptObjects::registerScriptObject(this) ;
-
 
     // web channel
     QWebChannel * channel = new QWebChannel(this);
@@ -49,10 +49,11 @@ BrowserWindow::BrowserWindow(QWidget *parent) :
         page->runJavaScript(apiFs.readFile(":/qtwebchannel/qwebchannel.js")) ;
         page->runJavaScript(apiFs.readFile(":/sdk/webkit/require.js")) ;
 
-        page->runJavaScript("new QWebChannel(qt.webChannelTransport, function(channel) {;"
+        page->runJavaScript(QString("new QWebChannel(qt.webChannelTransport, function(channel) {;"
         "    for (var name in channel.objects)"
         "        window[name] = channel.objects[name];"
-        "})") ;
+        "    $window.parentNodeThreadId = %1;"
+        "})").arg(this->parentNodeThreadId())) ;
 
         emit this->loaded(ok) ;
     }) ;
@@ -66,11 +67,6 @@ BrowserWindow::~BrowserWindow()
 void BrowserWindow::load(const QString & url) {
     ui->browser->load(QUrl(url)) ;
 }
-
-void BrowserWindow::openConsole() {
-    QDesktopServices::openUrl ( QUrl("http://127.0.0.1:17135") ) ;
-}
-
 
 bool BWApiFs::exists(const QString & filepath) {
     return false ;

@@ -30,6 +30,8 @@ protected:
     void run() ;
 
 private:
+    unsigned int objectId ;
+
     QStringList argv ;
     char ** argvArray = nullptr ;
     char * argvData = nullptr ;

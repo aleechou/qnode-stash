@@ -13,7 +13,7 @@ class BrowserWindowCreator: public QObject
 public:
     BrowserWindowCreator() ;
 
-    Q_INVOKABLE unsigned int createBrowserWindow() ;
+    Q_INVOKABLE unsigned int createBrowserWindow(unsigned int parentId) ;
 
     static BrowserWindowCreator * singleton() ;
 
@@ -47,24 +47,26 @@ class BrowserWindow : public QWidget
     Q_OBJECT
 
 public:
-    explicit BrowserWindow(QWidget *parent = 0);
+    explicit BrowserWindow(unsigned int parentObjectId ,QWidget *parent = 0);
     ~BrowserWindow();
 
+    Q_INVOKABLE unsigned int parentNodeThreadId() {
+        return this->parentObjectId ;
+    }
     unsigned int id() {return objectId ;}
 
     Q_INVOKABLE void load(const QString & url) ;
-    Q_INVOKABLE void openConsole() ;
-
-//    Q_INVOKABLE QJsonValue loadScript(const QString &) ;
 
 signals:
     void loaded(bool) ;
+
 
 private:
     Ui::BrowserWindow *ui;
     BWApiFs apiFs ;
 
     unsigned int objectId;
+    unsigned int parentObjectId ;
 };
 
 

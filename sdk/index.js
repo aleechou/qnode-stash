@@ -80,7 +80,7 @@ Window.meta = null
 qnode.classes.Window = Window
 qnode.window.create = function(url) {
     return new Promise(async(resolve) => {
-        var winId = await qnode.api.invoke($qnode_api_browser_window_creator, "createBrowserWindow()")
+        var winId = await qnode.api.invoke($qnode_api_browser_window_creator, "createBrowserWindow(uint)", $qnode_api_thread)
         var window = new Window(winId)
         if (!/:\/\//.test(url))
             url = "file://" + url

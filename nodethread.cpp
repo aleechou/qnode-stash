@@ -12,6 +12,8 @@ NodeThread::NodeThread(const QStringList & argv, const QString & sdkPath, QObjec
     : argv(argv)
     , QThread(parent)
 {
+    objectId = ScriptObjects::registerScriptObject(this) ;
+
     // 计算参数长度
     int nodeArgvSize = 0 ;
     foreach(QString arg, argv) {
@@ -77,6 +79,7 @@ void NodeThread::beforeloop(v8::Isolate * isolate, void * loop){
     DefineMethod("$qnode_api_call", NodeThread, jsCall);
     DefineMethod("$qnode_api_on", NodeThread, jsOn);
 
+    global->Set(v8string("$qnode_api_thread"), v8int32(thread->objectId)) ;
     global->Set(v8string("$qnode_api_browser_window_creator"), v8int32(BrowserWindowCreator::singleton()->id())) ;
     global->Set(v8string("$qnode_api_script_objects"), v8int32(ScriptObjects::singleton()->id())) ;
 
@@ -90,11 +93,7 @@ void NodeThread::beforeloop(v8::Isolate * isolate, void * loop){
 
     uv_idle_init((uv_loop_t*)loop, thread->uvidler);
 
-#ifdef Q_OS_MACX
     uv_idle_start(thread->uvidler, [](uv_idle_t*){
-#elif
-    uv_idle_start(thread->uvidler, [](uv_idle_t*, uv_idle_cb){
-#endif
         NodeThread * thread = (NodeThread*)QThread::currentThread() ;
         thread->eventDispatcher()->processEvents(QEventLoop::EventLoopExec) ;
     }) ;
