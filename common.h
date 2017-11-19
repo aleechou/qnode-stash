@@ -2,8 +2,9 @@
 #define COMMON_H
 
 #include <QDebug>
-#define qd qDebug()
-#define ql qDebug() << __LINE__ << "@" << __FILE__ ;
+
+#define qd(sth) std::cout << "@" << __LINE__ << " " << sth << std::flush ;
+#define ql qd("") ;
 
 
 

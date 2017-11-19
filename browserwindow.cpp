@@ -55,7 +55,7 @@ BrowserWindow::BrowserWindow(unsigned int parentObjectId, QWidget *parent) :
         "    $window.parentNodeThreadId = %1;"
         "})").arg(this->parentNodeThreadId())) ;
 
-        emit this->loaded(ok) ;
+        emit this->ready(ok) ;
     }) ;
 }
 

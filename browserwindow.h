@@ -58,7 +58,7 @@ public:
     Q_INVOKABLE void load(const QString & url) ;
 
 signals:
-    void loaded(bool) ;
+    void ready(bool) ;
 
 
 private:

@@ -8,7 +8,7 @@
 #include <QFile>
 
 
-NodeThread::NodeThread(const QStringList & argv, const QString & sdkPath, QObject *parent)
+NodeThread::NodeThread(const QStringList & argv, const QString & sdk, QObject *parent)
     : argv(argv)
     , QThread(parent)
 {
@@ -32,10 +32,9 @@ NodeThread::NodeThread(const QStringList & argv, const QString & sdkPath, QObjec
         argvIdx+= arg.length() + 1 ;
     }
 
+    if(!sdk.isEmpty())
+        this->sdk = sdk ;
 
-
-    if(!sdkPath.isEmpty())
-        this->sdkPath = sdkPath ;
     moveToThread(this);
 }
 
@@ -61,7 +60,7 @@ inline QString variant_qt_to_js(const QVariant & value){
 
 void NodeThread::invokeReturn(unsigned int invokeId, const QVariant & value) {
     QString stringRetValue = variant_qt_to_js(value) ;
-    QString script = QString("$qnode_api_invoke_return(%1, %2)").arg(invokeId).arg(stringRetValue) ;
+    QString script = QString("$qnodeapi_invoke_return(%1, %2)").arg(invokeId).arg(stringRetValue) ;
     v8::HandleScope scope(isolate);
     v8::Script::Compile ( v8string(script.toStdString().c_str()) )->Run();
 }
@@ -75,18 +74,16 @@ void NodeThread::beforeloop(v8::Isolate * isolate, void * loop){
     v8::Local<v8::Object> global = isolate->GetCurrentContext()->Global();
 
     // qnode api
-    DefineMethod("$qnode_api_invoke", NodeThread, jsInvoke);
-    DefineMethod("$qnode_api_call", NodeThread, jsCall);
-    DefineMethod("$qnode_api_on", NodeThread, jsOn);
+    DefineMethod("$qnodeapi_invoke", NodeThread, jsInvoke);
+    DefineMethod("$qnodeapi_call", NodeThread, jsCall);
+    DefineMethod("$qnodeapi_on", NodeThread, jsOn);
+    DefineMethod("$qnodeapi_read_inner_module", NodeThread, jsReadInnerModule);
+    DefineMethod("$qnodeapi_inner_module_exists", NodeThread, jsInnerModuleExists);
 
-    global->Set(v8string("$qnode_api_thread"), v8int32(thread->objectId)) ;
-    global->Set(v8string("$qnode_api_browser_window_creator"), v8int32(BrowserWindowCreator::singleton()->id())) ;
-    global->Set(v8string("$qnode_api_script_objects"), v8int32(ScriptObjects::singleton()->id())) ;
-
-    // load qnode sdk
-    if(!thread->sdkPath.isEmpty()) {
-        thread->requireScript(thread->sdkPath) ;
-    }
+    global->Set(v8string("$qnodeapi_thread"), v8int32(thread->objectId)) ;
+    global->Set(v8string("$qnodeapi_browser_window_creator"), v8int32(BrowserWindowCreator::singleton()->id())) ;
+    global->Set(v8string("$qnodeapi_script_objects"), v8int32(ScriptObjects::singleton()->id())) ;
+    global->Set(v8string("$qnodeapi_sdk"), v8string(thread->sdk.toStdString().c_str())) ;
 
     // process qt event loop
     thread->uvidler = new uv_idle_t;
@@ -113,7 +110,7 @@ void NodeThread::runScript(const QString & script){
 bool NodeThread::requireScript(const QString & path){
     QFile file(path) ;
     if(!file.open(QFile::ReadOnly)) {
-        qd << "can not open file" << path ;
+        qCritical() << "can not open file" << path ;
         return false ;
     }
 
@@ -122,6 +119,34 @@ bool NodeThread::requireScript(const QString & path){
     file.close();
 
     return true ;
+}
+
+#define INNER_MODULE_PATH \
+    v8::String::Utf8Value argFilename(args[0]->ToString()); \
+    QString filename(*argFilename); \
+    if(filename.right(4)==".qrc") \
+        filename = filename.left(filename.length() - 4); /* 去掉 .qrc 后缀 */ \
+    filename = filename.replace("qrc://",":");
+
+void NodeThread::jsReadInnerModule(const v8::FunctionCallbackInfo<v8::Value> & args) {
+
+    INNER_MODULE_PATH ;
+
+    QFile file(filename);
+    if (!file.open(QFile::ReadOnly)){
+        qDebug() << "can not open file " << filename;
+        return;
+    }
+
+    QByteArray content = file.readAll();
+    file.close();
+
+    args.GetReturnValue().Set(v8::String::NewFromUtf8(args.GetIsolate(), content.data()));
+}
+
+void NodeThread::jsInnerModuleExists(const v8::FunctionCallbackInfo<v8::Value> & args) {
+    INNER_MODULE_PATH ;
+    args.GetReturnValue().Set(v8::Boolean::New(args.GetIsolate(), QFile::exists(filename)));
 }
 
 
@@ -142,6 +167,8 @@ bool NodeThread::requireScript(const QString & path){
             return ;                                                        \
         }                                                                   \
     }
+
+
 
 void NodeThread::jsInvoke(const v8::FunctionCallbackInfo<v8::Value> & args){
 
@@ -207,7 +234,7 @@ void NodeThread::jsOn(const v8::FunctionCallbackInfo<v8::Value> & args){
 
 void DynamicConnectionReceiver::slot(){
     sender() ;
-    QString script = QString("$qnode_api_emit(%1)").arg(connId) ;
+    QString script = QString("$qnodeapi_emit(%1)").arg(connId) ;
     v8::Isolate * isolate = from->isolate ;
     v8::HandleScope scope(from->isolate);
     v8::Script::Compile ( v8string(script.toStdString().c_str()) )->Run();

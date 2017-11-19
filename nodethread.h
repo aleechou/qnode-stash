@@ -15,10 +15,12 @@ class NodeThread : public QThread
 {
     Q_OBJECT
 public:
-    explicit NodeThread(const QStringList &, const QString & sdkPath=QString(),QObject *parent = nullptr);
+    explicit NodeThread(const QStringList &, const QString & sdk=QString(),QObject *parent = nullptr);
 
     static void beforeloop(v8::Isolate *, void *) ;
 
+    static void jsReadInnerModule(const v8::FunctionCallbackInfo<v8::Value> & args) ;
+    static void jsInnerModuleExists(const v8::FunctionCallbackInfo<v8::Value> & args) ;
     static void jsInvoke(const v8::FunctionCallbackInfo<v8::Value> & args) ;
     static void jsCall(const v8::FunctionCallbackInfo<v8::Value> & args) ;
     static void jsOn(const v8::FunctionCallbackInfo<v8::Value> & args) ;
@@ -35,7 +37,7 @@ private:
     QStringList argv ;
     char ** argvArray = nullptr ;
     char * argvData = nullptr ;
-    QString sdkPath = ":sdk/index.js" ;
+    QString sdk = "qrc://sdk/" ;
     v8::Isolate * isolate = nullptr ;
 
     uv_idle_t * uvidler = nullptr ;

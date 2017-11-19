@@ -1,40 +1,55 @@
 #include "browserwindow.h"
-#include <QApplication>
 #include <QEventLoop>
 #include "nodethread.h"
-#include <qdebug.h>
 #include <QtWebEngine>
 #include <QTextCodec>
+#include <iostream>
+
+
+#include <QDebug>
+#include <QApplication>
+#include <QMutex>
+#include <iostream>
 
 void messageOutputFilter(QtMsgType type, const QMessageLogContext &context, const QString &msg)
 {
+    // filter messages
+    if( type==QtWarningMsg && (msg.indexOf("of object 'BrowserWindow' has no notify signal and is not constant")>=0
+            || msg.indexOf("Remote debugging server started successfully. Try pointing a Chromium-based browser to")>=0
+    ))
+        return ;
+
     QByteArray localMsg = msg.toLocal8Bit();
-    switch (type) {
+
+    QString strMsg("");
+    switch(type)
+    {
     case QtDebugMsg:
-        fprintf(stderr, "Debug: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
-        break;
-    case QtInfoMsg:
-        fprintf(stderr, "Info: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
+        strMsg = QString("Debug:");
         break;
     case QtWarningMsg:
-        if( msg.indexOf("of object 'BrowserWindow' has no notify signal and is not constant")<0
-                && msg.indexOf("Remote debugging server started successfully. Try pointing a Chromium-based browser to")<0
-        )
-            fprintf(stderr, "Warning: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
+        strMsg = QString("Warning:");
         break;
     case QtCriticalMsg:
-        fprintf(stderr, "Critical: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
+        strMsg = QString("Critical:");
         break;
     case QtFatalMsg:
-        fprintf(stderr, "Fatal: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
-        abort();
+        strMsg = QString("Fatal:");
+        break;
     }
+
+    // 设置输出信息格式
+    QString strMessage = QString("[@%2] %1")
+            .arg(localMsg.constData()).arg(context.line);
+
+    // 输出信息
+    std::cout << strMessage.toStdString().c_str() << std::endl << std::flush ;
 }
 
 
 int main(int argc, char *argv[])
 {
-    qInstallMessageHandler(messageOutputFilter);
+    qInstallMessageHandler(messageOutputFilter) ;
 
     QApplication a(argc, argv);
 
@@ -48,13 +63,14 @@ int main(int argc, char *argv[])
     for(int i=0; i<argc; i++) {
         if( strcmp(argv[i],"--sdk")==0 ) {
             if( i<argc-1 ){
+
+                qd(">>" << sdkPath.toStdString().c_str())
                 sdkPath = argv[++i] ;
             }
             continue ;
         }
         nodeArgv << argv[i] ;
     }
-    nodeArgv << "." ;
 
     NodeThread node(nodeArgv, sdkPath) ;
     node.start();
