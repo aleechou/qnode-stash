@@ -6,6 +6,7 @@
 #include "nodeapi.h"
 #include "common.h"
 #include <QFile>
+#include <iostream>
 
 
 NodeThread::NodeThread(const QStringList & argv, const QString & sdk, QObject *parent)
@@ -65,7 +66,6 @@ void NodeThread::invokeReturn(unsigned int invokeId, const QVariant & value) {
     v8::Script::Compile ( v8string(script.toStdString().c_str()) )->Run();
 }
 
-
 void NodeThread::beforeloop(v8::Isolate * isolate, void * loop){
 
     NodeThread * thread = (NodeThread*)QThread::currentThread() ;
@@ -84,6 +84,7 @@ void NodeThread::beforeloop(v8::Isolate * isolate, void * loop){
     global->Set(v8string("$qnodeapi_browser_window_creator"), v8int32(BrowserWindowCreator::singleton()->id())) ;
     global->Set(v8string("$qnodeapi_script_objects"), v8int32(ScriptObjects::singleton()->id())) ;
     global->Set(v8string("$qnodeapi_sdk"), v8string(thread->sdk.toStdString().c_str())) ;
+    global->Set(v8string("$qnodeapi_console_port"), v8string(qgetenv("QTWEBENGINE_REMOTE_DEBUGGING"))) ;
 
     // process qt event loop
     thread->uvidler = new uv_idle_t;

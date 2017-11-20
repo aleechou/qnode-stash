@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QMap>
 #include <QJsonValue>
+#include <QJsonArray>
 #include "scriptobjects.h"
 
 class BrowserWindowCreator: public QObject
@@ -55,7 +56,11 @@ public:
     }
     unsigned int id() {return objectId ;}
 
+    Q_INVOKABLE void runScript(const QString & script) ;
     Q_INVOKABLE void load(const QString & url) ;
+    Q_INVOKABLE void onLoaded() ;
+
+    Q_INVOKABLE void runScriptInThread(unsigned int, const QString &) ;
 
 signals:
     void ready(bool) ;

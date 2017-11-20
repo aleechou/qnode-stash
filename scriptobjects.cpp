@@ -64,7 +64,6 @@ void ScriptObjects::invokeMethod(QObject * object, const QString & method, const
 
     }) ;
     anchor->deleteLater();
-
 }
 
 

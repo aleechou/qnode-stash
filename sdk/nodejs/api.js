@@ -1,4 +1,10 @@
-qnode = { api: {}, window: {}, classes: {} }
+qnode = {
+    api: {
+        threadId: $qnodeapi_thread
+    },
+    window: {},
+    classes: {}
+}
 
 var invokeReturnCallbacks = {}
 $qnodeapi_invoke_return = function(reqId, value) {
@@ -59,3 +65,6 @@ qnode.api.wrapper = function(qtClassMeta) {
     return wrapper
 }
 
+qnode.api.runScriptInThread = function(threadObjId, script) {
+    return qnode.api.invoke(threadObjId, "runScript(QString)", script)
+}

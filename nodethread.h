@@ -26,6 +26,7 @@ public:
     static void jsOn(const v8::FunctionCallbackInfo<v8::Value> & args) ;
 
     Q_INVOKABLE void invokeReturn(unsigned int invokeId, const QVariant &) ;
+    Q_INVOKABLE void runScript(const QString & script) ;
 
     friend class DynamicConnectionReceiver ;
 protected:
@@ -44,7 +45,6 @@ private:
 
     unsigned int invokeAnotherThreadReqId = 0 ;
 
-    Q_INVOKABLE void runScript(const QString &) ;
     Q_INVOKABLE bool requireScript(const QString &) ;
 };
 

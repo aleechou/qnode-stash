@@ -38,23 +38,20 @@ void messageOutputFilter(QtMsgType type, const QMessageLogContext &context, cons
         break;
     }
 
-    // 设置输出信息格式
-    QString strMessage = QString("[@%2] %1")
-            .arg(localMsg.constData()).arg(context.line);
-
     // 输出信息
-    std::cout << strMessage.toStdString().c_str() << std::endl << std::flush ;
+    std::cout << localMsg.toStdString().c_str() << std::endl << std::flush ;
 }
 
 
 int main(int argc, char *argv[])
 {
     qInstallMessageHandler(messageOutputFilter) ;
+    srand((unsigned)time(NULL));
 
     QApplication a(argc, argv);
 
     QTextCodec::setCodecForLocale(QTextCodec::codecForName("UTF-8"));
-    qputenv("QTWEBENGINE_REMOTE_DEBUGGING","17135");
+    qputenv("QTWEBENGINE_REMOTE_DEBUGGING",QString("%1").arg((rand() % 50000)+10000).toStdString().c_str());
     QtWebEngine::initialize();
 
     QString sdkPath ;

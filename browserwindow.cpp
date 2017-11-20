@@ -40,23 +40,53 @@ BrowserWindow::BrowserWindow(unsigned int parentObjectId, QWidget *parent) :
     // web channel
     QWebChannel * channel = new QWebChannel(this);
     channel->registerObject("$window", this);
+    channel->registerObject("$qnodeapi_script_objects", ScriptObjects::singleton());
+    channel->registerObject("$qnodeapi_browser_window_creator", BrowserWindowCreator::singleton());
     ui->browser->page()->setWebChannel(channel);
 
     QObject::connect(ui->browser->page(), &QWebEnginePage::loadFinished,[this](bool ok){
 
+        if(!ok) {
+            emit this->ready(ok);
+        }
+
         QWebEnginePage * page = ui->browser->page() ;
 
         page->runJavaScript(apiFs.readFile(":/qtwebchannel/qwebchannel.js")) ;
-        page->runJavaScript(apiFs.readFile(":/sdk/webkit/require.js")) ;
+        page->runJavaScript(apiFs.readFile(":/sdk/webkit/api.js")) ;
+        page->runJavaScript(apiFs.readFile(":/sdk/common/api.run.js")) ;
 
-        page->runJavaScript(QString("new QWebChannel(qt.webChannelTransport, function(channel) {;"
-        "    for (var name in channel.objects)"
-        "        window[name] = channel.objects[name];"
-        "    $window.parentNodeThreadId = %1;"
-        "})").arg(this->parentNodeThreadId())) ;
-
-        emit this->ready(ok) ;
+        QString boot = QString(
+                    "qnode.api.threadId = %1;\r\n"
+                    "qnode.api.parentThreadId = %2;\r\n"
+                    "$qnodeapi_console_port = %3;\r\n"
+                    "new QWebChannel(qt.webChannelTransport, function(channel) { ;\r\n"
+                    "    for (var name in channel.objects)\r\n"
+                    "        window[name] = channel.objects[name] ;\r\n"
+                    "    qnode.window = $window ;\r\n"
+                    "    $window.onLoaded() ;\r\n"
+                    "})\r\n"
+                )
+                    .arg(this->objectId)
+                    .arg(this->parentObjectId)
+                    .arg(QString(qgetenv("QTWEBENGINE_REMOTE_DEBUGGING"))) ;
+        page->runJavaScript(boot);
     }) ;
+}
+
+void BrowserWindow::onLoaded() {
+    emit this->ready(true) ;
+}
+
+void BrowserWindow::runScriptInThread(unsigned int threadId, const QString & script) {
+    QObject * parentThread = ScriptObjects::queryScriptObjectById(threadId) ;
+    if(!parentThread) {
+        return ;
+    }
+    bool ok = QMetaObject::invokeMethod(parentThread, "runScript", Qt::QueuedConnection, Q_ARG(QString, script)) ;
+    if(!ok) {
+        qCritical() << "can not QMetaObject::invokeMethod() runScript(QString) , for" << parentThread  ;
+    }
 }
 
 BrowserWindow::~BrowserWindow()
@@ -66,6 +96,11 @@ BrowserWindow::~BrowserWindow()
 
 void BrowserWindow::load(const QString & url) {
     ui->browser->load(QUrl(url)) ;
+}
+
+
+void BrowserWindow::runScript(const QString & script) {
+    ui->browser->page()->runJavaScript(script) ;
 }
 
 bool BWApiFs::exists(const QString & filepath) {

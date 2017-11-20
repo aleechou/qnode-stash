@@ -1,4 +1,3 @@
-
 const EventEmitter = require('events');
 
 class Window extends EventEmitter {
@@ -9,22 +8,21 @@ class Window extends EventEmitter {
     }
 
     on(event, callback) {
-        if(event=="ready") {
+        if (event == "ready") {
             this._hook_qt_ready()
         }
         return EventEmitter.prototype.on.apply(this, arguments)
     }
     once(event, callback) {
-        if(event=="ready") {
+        if (event == "ready") {
             this._hook_qt_ready()
         }
         return EventEmitter.prototype.once.apply(this, arguments)
     }
 
     _hook_qt_ready() {
-        if(!this._on_qt_ready) {
-            this._on_qt_ready = (ok)=>{
-                console.log("readyreadyready")
+        if (!this._on_qt_ready) {
+            this._on_qt_ready = (ok) => {
                 this.emit('ready', ok)
             }
             qnode.api.on(this.objId, "ready(bool)", this._on_qt_ready)
@@ -32,36 +30,45 @@ class Window extends EventEmitter {
     }
 
     _oncreated(objId) {
-        if(!Window.meta) {
+        if (!Window.meta) {
             Window.meta = qnode.api.reflect(objId)
             Window.meta.__wrapper__ = qnode.api.wrapper(Window.meta)
-            for(var name in Window.meta.__wrapper__) {
-                Window.prototype[name] = Window.meta.__wrapper__[name]
+            for (var name in Window.meta.__wrapper__) {
+                if (!Window.prototype[name])
+                    Window.prototype[name] = Window.meta.__wrapper__[name]
             }
         }
         this.objId = objId
     }
 
-    load (url) {
-        return new Promise((resolve)=>{
-            qnode.api.invoke(this.objId, "load(qstring)", url)
-            this.once("ready",(ok)=>{
-                console.log("okkkkkkkk")
+    load(url) {
+        return new Promise((resolve) => {
+            qnode.api.invoke(this.objId, "load(QString)", url)
+            this.once("ready", (ok) => {
                 resolve(ok)
             })
         })
+    }
+
+    run(func, vars) {
+        return qnode.api.run(this.objId, func, vars)
     }
 }
 
 qnode.classes.Window = Window
 qnode.window.create = async function() {
-    return new Promise((resolve)=>{
-       var window = new Window()
-       qnode.api.invoke($qnodeapi_browser_window_creator, "createBrowserWindow(uint)", $qnodeapi_thread)
-           .then((objId)=>{
+    return new Promise((resolve) => {
+        var window = new Window()
+        qnode.api.invoke($qnodeapi_browser_window_creator, "createBrowserWindow(uint)", qnode.api.threadId)
+            .then((objId) => {
                 window._oncreated(objId)
                 resolve(window)
-             })
-       return window
+            })
+        return window
     })
+}
+qnode.window.openConsole = async function() {
+    var inspector = await qnode.window.create()
+    inspector.load("http://127.0.0.1:" + $qnodeapi_console_port)
+    inspector.show()
 }

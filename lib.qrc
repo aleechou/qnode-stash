@@ -1,8 +1,9 @@
 <RCC>
     <qresource prefix="/">
-        <file>sdk/webkit/require.js</file>
-        <file>sdk/boot.js</file>
-        <file>sdk/api.js</file>
-        <file>sdk/window.js</file>
+        <file>sdk/nodejs/api.js</file>
+        <file>sdk/nodejs/boot.js</file>
+        <file>sdk/nodejs/window.js</file>
+        <file>sdk/common/api.run.js</file>
+        <file>sdk/webkit/api.js</file>
     </qresource>
 </RCC>

@@ -1,4 +1,5 @@
 require("./api.js")
+require("../common/api.run.js")
 require("./window.js")
 
 if(process.argv[1])
