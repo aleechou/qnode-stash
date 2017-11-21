@@ -55,6 +55,7 @@ BrowserWindow::BrowserWindow(unsigned int parentObjectId, QWidget *parent) :
         page->runJavaScript(apiFs.readFile(":/qtwebchannel/qwebchannel.js")) ;
         page->runJavaScript(apiFs.readFile(":/sdk/webkit/api.js")) ;
         page->runJavaScript(apiFs.readFile(":/sdk/common/api.run.js")) ;
+        page->runJavaScript(apiFs.readFile(":/sdk/common/shadow.js")) ;
 
         QString boot = QString(
                     "qnode.api.threadId = %1;\r\n"

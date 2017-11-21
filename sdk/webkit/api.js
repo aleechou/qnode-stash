@@ -1,5 +1,6 @@
 qnode = {
-    api: {}
+    api: {},
+    classes: {}
 }
 
 qnode.api.runScriptInThread = function(threadObjId, script) {
