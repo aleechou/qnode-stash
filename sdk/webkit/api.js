@@ -1,5 +1,6 @@
 qnode = {
     api: {},
+    bridge: {},
     classes: {}
 }
 

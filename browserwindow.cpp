@@ -55,7 +55,7 @@ BrowserWindow::BrowserWindow(unsigned int parentObjectId, QWidget *parent) :
         page->runJavaScript(apiFs.readFile(":/qtwebchannel/qwebchannel.js")) ;
         page->runJavaScript(apiFs.readFile(":/sdk/webkit/api.js")) ;
         page->runJavaScript(apiFs.readFile(":/sdk/common/api.run.js")) ;
-        page->runJavaScript(apiFs.readFile(":/sdk/common/shadow.js")) ;
+        page->runJavaScript(apiFs.readFile(":/sdk/common/bridge.js")) ;
 
         QString boot = QString(
                     "qnode.api.threadId = %1;\r\n"
@@ -97,6 +97,10 @@ BrowserWindow::~BrowserWindow()
 
 void BrowserWindow::load(const QString & url) {
     ui->browser->load(QUrl(url)) ;
+}
+
+void BrowserWindow::loadScript(const QString & url) {
+    ui->browser->page()->runJavaScript(QString("var script = document.createElement('script'); script.src='%1'; document.body.appendChild(script)").arg(url)) ;
 }
 
 

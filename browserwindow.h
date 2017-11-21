@@ -56,6 +56,7 @@ public:
     }
     unsigned int id() {return objectId ;}
 
+    Q_INVOKABLE void loadScript(const QString & url) ;
     Q_INVOKABLE void runScript(const QString & script) ;
     Q_INVOKABLE void load(const QString & url) ;
     Q_INVOKABLE void onLoaded() ;

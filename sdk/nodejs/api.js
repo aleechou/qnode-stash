@@ -2,6 +2,7 @@ qnode = {
     api: {
         threadId: $qnodeapi_thread
     },
+    bridge: {},
     window: {},
     classes: {}
 }

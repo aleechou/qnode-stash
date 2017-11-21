@@ -53,6 +53,10 @@ class Window extends EventEmitter {
     run(func, vars) {
         return qnode.api.run(this.objId, func, vars)
     }
+
+    bridgeShadowObject(object, funcReceiverInWindow) {
+        qnode.bridge.bridgeTo(this.objId, object, funcReceiverInWindow)
+    }
 }
 
 qnode.classes.Window = Window

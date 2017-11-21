@@ -5,6 +5,6 @@
         <file>sdk/nodejs/window.js</file>
         <file>sdk/common/api.run.js</file>
         <file>sdk/webkit/api.js</file>
-        <file>sdk/common/shadow.js</file>
+        <file>sdk/common/bridge.js</file>
     </qresource>
 </RCC>
