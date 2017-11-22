@@ -74,7 +74,7 @@ function proxy(target, meta, path) {
         set: function(target, prop, value) {
 
             // 没有变化
-            if (target[prop] == value) {
+            if (target[prop] === value) {
                 return true
             }
 
@@ -146,7 +146,6 @@ qnode.bridge.commit = function(localId, path, prop, value, from) {
     $mutation_for = localId
 
     path.reduce((object, name) => object[name], localObject)[prop] = value
-
 
     $mutation_from = undefined
     $mutation_for = undefined

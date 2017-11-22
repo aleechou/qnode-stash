@@ -4,7 +4,9 @@
         <file>sdk/nodejs/boot.js</file>
         <file>sdk/nodejs/window.js</file>
         <file>sdk/common/api.run.js</file>
-        <file>sdk/webkit/api.js</file>
         <file>sdk/common/bridge.js</file>
+        <file>sdk/webkit/api.js</file>
+        <file>sdk/webkit/eventemitter.js</file>
+        <file>sdk/webkit/window.js</file>
     </qresource>
 </RCC>

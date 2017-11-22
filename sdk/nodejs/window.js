@@ -59,12 +59,22 @@ class Window extends EventEmitter {
     }
 }
 
+objectById = {}
+
+qnode.window.eventEmit = function(objId, eventName, argv) {
+    if (!objectById[objId]) {
+        return
+    }
+    objectById[objId].emit(eventName, ...argv)
+}
+
 qnode.classes.Window = Window
 qnode.window.create = async function() {
     return new Promise((resolve) => {
         var window = new Window()
         qnode.api.invoke($qnodeapi_browser_window_creator, "createBrowserWindow(uint)", qnode.api.threadId)
             .then((objId) => {
+                objectById[objId] = window
                 window._oncreated(objId)
                 resolve(window)
             })
